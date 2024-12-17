@@ -5,6 +5,7 @@ const ctx = canvas.getContext("2d");
 canvas.width = 1560; // Width
 canvas.height = 800; // Height
 
+
 // Define pockets with corresponding words
 const pockets = [
     { x: 50, y: 50, width: 200, height: 255, label: "[장애조기발견 선별검사]", correctWords: ["사회성숙도검사", "적응행동검사", "영유아발달검사"], words: [], maxRows: 6 },
@@ -23,6 +24,16 @@ const words = [
     "성격진단검사", "행동발달평가", "학습준비도검사", "학습준비도검사", "구문검사",
     "음운검사", "언어발달검사", "시지각발달검사", "지각운동발달검사", "시각운동통합발달검사"
 ];
+
+// Fisher-Yates Shuffle로 배열 랜덤 섞기
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]]; // Swap
+    }
+}
+
+shuffle(words); // 단어 순서 섞기
 
 const wordPositions = [];
 let startX = 850, startY = 50, boxWidth = 170, boxHeight = 25;
@@ -54,9 +65,9 @@ function draw() {
 
     // Draw game message
     ctx.fillStyle = "black";
-    ctx.font = "20px Arial";
+    ctx.font = "bold 20px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("다 외울 때까지 파이팅!", canvas.width / 2, 30);
+    ctx.fillText("@h0onie", canvas.width / 2, 30);
 
     // Draw pockets
     pockets.forEach(pocket => {
@@ -64,7 +75,7 @@ function draw() {
         ctx.fillRect(pocket.x, pocket.y, pocket.width, pocket.height);
         ctx.strokeRect(pocket.x, pocket.y, pocket.width, pocket.height);
         ctx.fillStyle = "black";
-        ctx.font = "14px Arial";
+        ctx.font = "bold 14px Arial";
         ctx.fillText(pocket.label, pocket.x + pocket.width / 2, pocket.y + 20);
 
         pocket.words.forEach((word, index) => {

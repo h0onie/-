@@ -229,66 +229,93 @@ function checkGameCompletion() {
     }
 }
 
-// Mouse Events
+// 터치 이벤트 헬퍼 함수
+function getTouchPosition(canvas, touch) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+    };
+}
+
+// 마우스와 터치를 모두 처리하는 이벤트
 canvas.addEventListener("mousedown", (e) => {
-    const mouseX = e.offsetX, mouseY = e.offsetY;
-    wordPositions.forEach(word => {
-        if (!word.placed && mouseX > word.x && mouseX < word.x + word.width &&
-            mouseY > word.y && mouseY < word.y + word.height) {
-            draggingWord = word;
-            offsetX = mouseX - word.x;
-            offsetY = mouseY - word.y;
-        }
-    });
+    handleStart(e.offsetX, e.offsetY);
+});
+canvas.addEventListener("touchstart", (e) => {
+    const touch = getTouchPosition(canvas, e.touches[0]);
+    handleStart(touch.x, touch.y);
 });
 
 canvas.addEventListener("mousemove", (e) => {
-    if (draggingWord) {
-        draggingWord.x = e.offsetX - offsetX;
-        draggingWord.y = e.offsetY - offsetY;
-        draw();
-    }
+    handleMove(e.offsetX, e.offsetY);
+});
+canvas.addEventListener("touchmove", (e) => {
+    e.preventDefault(); // 스크롤 방지
+    const touch = getTouchPosition(canvas, e.touches[0]);
+    handleMove(touch.x, touch.y);
 });
 
 canvas.addEventListener("mouseup", () => {
+    handleEnd();
+});
+canvas.addEventListener("touchend", () => {
+    handleEnd();
+});
+
+// 공통 로직
+function handleStart(x, y) {
+    wordPositions.forEach(word => {
+        if (!word.placed && x > word.x && x < word.x + word.width &&
+            y > word.y && y < word.y + word.height) {
+            draggingWord = word;
+            offsetX = x - word.x;
+            offsetY = y - word.y;
+        }
+    });
+}
+
+function handleMove(x, y) {
+    if (draggingWord) {
+        draggingWord.x = x - offsetX;
+        draggingWord.y = y - offsetY;
+        draw();
+    }
+}
+
+function handleEnd() {
     if (draggingWord) {
         let placed = false;
         for (let pocket of pockets) {
-            // 단어의 중심점 계산
-const centerX = draggingWord.x + draggingWord.width / 2;
-const centerY = draggingWord.y + draggingWord.height / 2;
-
-if (
-    centerX > pocket.x &&
-    centerX < pocket.x + pocket.width &&
-    centerY > pocket.y &&
-    centerY < pocket.y + pocket.height &&
-    pocket.correctWords.includes(draggingWord.text) &&
-    !pocket.words.some(w => w.text === draggingWord.text) &&
-    pocket.words.length < pocket.maxRows
-) {
-    // 위치 조정 및 배치
-    draggingWord.x = pocket.x + (pocket.width - draggingWord.width) / 2;
-    draggingWord.y = pocket.y + 30 + pocket.words.length * (draggingWord.height + 2);
-
-    pocket.words.push(draggingWord);
-    draggingWord.placed = true;
-    placed = true;
-    break;
-}
-
+            const centerX = draggingWord.x + draggingWord.width / 2;
+            const centerY = draggingWord.y + draggingWord.height / 2;
+            if (
+                centerX > pocket.x &&
+                centerX < pocket.x + pocket.width &&
+                centerY > pocket.y &&
+                centerY < pocket.y + pocket.height &&
+                pocket.correctWords.includes(draggingWord.text) &&
+                !pocket.words.some(w => w.text === draggingWord.text) &&
+                pocket.words.length < pocket.maxRows
+            ) {
+                draggingWord.x = pocket.x + (pocket.width - draggingWord.width) / 2;
+                draggingWord.y = pocket.y + 30 + pocket.words.length * (draggingWord.height + 2);
+                pocket.words.push(draggingWord);
+                draggingWord.placed = true;
+                placed = true;
+                break;
+            }
         }
-
         if (!placed) {
             draggingWord.x = draggingWord.originalX;
             draggingWord.y = draggingWord.originalY;
         }
-
         draggingWord = null;
         checkGameCompletion();
         draw();
     }
-});
+}
+
 
 // 초기에는 게임을 시작하지 않음
 // draw();

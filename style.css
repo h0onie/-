@@ -1,0 +1,33 @@
+body {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    background-color: #f0f8ff;
+    margin: 0;
+}
+
+canvas {
+    display: block;
+    margin: 20px auto;
+    border: 2px solid black;
+}
+
+#start-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+#start-screen h1 {
+    font-size: 36px;
+    margin-bottom: 50px;
+}
+
+#start-screen button {
+    width: 200px;
+    padding: 15px;
+    margin: 10px;
+    font-size: 18px;
+    cursor: pointer;
+}

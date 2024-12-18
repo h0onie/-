@@ -239,29 +239,43 @@ function getTouchPosition(canvas, touch) {
 }
 
 // 마우스와 터치를 모두 처리하는 이벤트
-canvas.addEventListener("mousedown", (e) => {
-    handleStart(e.offsetX, e.offsetY);
-});
+let isDragging = false; // 드래깅 상태를 확인
+
+// 터치 이벤트 헬퍼 함수
+function getTouchPosition(canvas, touch) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+    };
+}
+
+// 터치 및 마우스 이벤트 처리
 canvas.addEventListener("touchstart", (e) => {
     const touch = getTouchPosition(canvas, e.touches[0]);
     handleStart(touch.x, touch.y);
+    if (draggingWord) {
+        isDragging = true; // 드래깅 시작
+    }
 });
 
-canvas.addEventListener("mousemove", (e) => {
-    handleMove(e.offsetX, e.offsetY);
-});
 canvas.addEventListener("touchmove", (e) => {
-    e.preventDefault(); // 스크롤 방지
     const touch = getTouchPosition(canvas, e.touches[0]);
-    handleMove(touch.x, touch.y);
+
+    // 드래깅 중일 때만 스크롤 방지
+    if (isDragging) {
+        e.preventDefault(); // 화면 스크롤 방지
+        handleMove(touch.x, touch.y);
+    }
 });
 
-canvas.addEventListener("mouseup", () => {
-    handleEnd();
-});
 canvas.addEventListener("touchend", () => {
-    handleEnd();
+    if (isDragging) {
+        handleEnd();
+        isDragging = false; // 드래깅 종료
+    }
 });
+
 
 // 공통 로직
 function handleStart(x, y) {

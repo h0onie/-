@@ -9,6 +9,15 @@ const startScreen = document.getElementById("start-screen");
 const practiceButton = document.getElementById("practice-mode");
 const testButton = document.getElementById("test-mode");
 
+// 스크롤 오프셋 추가
+let scrollOffsetX = 0;
+let scrollOffsetY = 0;
+
+// 터치 스크롤 관련 변수
+let isTouching = false;
+let touchStartX = 0;
+let touchStartY = 0;
+
 // 게임 초기화 함수
 function initGame() {
     wordPositions = [];
@@ -96,6 +105,8 @@ const pocketColors = {
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(-scrollOffsetX, -scrollOffsetY); // 스크롤 오프셋 반영
 
     ctx.fillStyle = "black";
     ctx.font = "bold 20px Arial";
@@ -162,6 +173,8 @@ function draw() {
             }
         });
     }
+
+    ctx.restore();
 
     if (!gameCompleted || fadeAlpha < 1) {
         requestAnimationFrame(draw);
@@ -264,30 +277,52 @@ function handleEnd() {
 canvas.addEventListener("touchstart", e => {
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    handleStart(touch.clientX - rect.left, touch.clientY - rect.top);
+    handleStart(touch.clientX - rect.left + scrollOffsetX, touch.clientY - rect.top + scrollOffsetY);
+    isTouching = true;
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
 });
 
 canvas.addEventListener("touchmove", e => {
-    const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    handleMove(touch.clientX - rect.left, touch.clientY - rect.top);
+    if (isTouching) {
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+
+        scrollOffsetX -= deltaX;
+        scrollOffsetY -= deltaY;
+
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+
+        draw(); // 스크롤된 상태로 다시 그리기
+    }
     e.preventDefault();
 });
 
 canvas.addEventListener("touchend", () => {
+    isTouching = false;
     handleEnd();
 });
 
 canvas.addEventListener("mousedown", e => {
     const rect = canvas.getBoundingClientRect();
-    handleStart(e.clientX - rect.left, e.clientY - rect.top);
+    handleStart(e.clientX - rect.left + scrollOffsetX, e.clientY - rect.top + scrollOffsetY);
 });
 
 canvas.addEventListener("mousemove", e => {
     const rect = canvas.getBoundingClientRect();
-    handleMove(e.clientX - rect.left, e.clientY - rect.top);
+    handleMove(e.clientX - rect.left + scrollOffsetX, e.clientY - rect.top + scrollOffsetY);
 });
 
 canvas.addEventListener("mouseup", () => {
     handleEnd();
+});
+
+// 마우스 휠 스크롤 처리
+canvas.addEventListener("wheel", e => {
+    scrollOffsetY += e.deltaY;
+    scrollOffsetX += e.deltaX;
+    draw(); // 스크롤된 상태로 다시 그리기
+    e.preventDefault();
 });

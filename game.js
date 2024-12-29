@@ -111,7 +111,7 @@ function draw() {
     ctx.fillStyle = "black";
     ctx.font = "bold 20px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("@h0onie Version 1.3.2", canvas.width / 2, 30);
+    ctx.fillText("@h0onie Version 1.3.4", canvas.width / 2, 30);
 
     pockets.forEach(pocket => {
         ctx.fillStyle = "lightgray";
@@ -332,12 +332,22 @@ canvas.addEventListener("mouseup", () => {
 });
 
 // 마우스 휠 스크롤 처리
+let isScrolling = false;
+
 canvas.addEventListener("wheel", e => {
     if (!draggingWord) {
         // 드래그 중이 아닐 때만 스크롤 동작
         scrollOffsetY += e.deltaY;
         scrollOffsetX += e.deltaX;
-        draw(); // 스크롤된 상태로 다시 그리기
+
+        if (!isScrolling) {
+            isScrolling = true;
+            requestAnimationFrame(() => {
+                draw(); // 스크롤된 상태로 다시 그리기
+                isScrolling = false;
+            });
+        }
     }
     e.preventDefault(); // 스크롤 기본 동작 방지
 });
+

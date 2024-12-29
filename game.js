@@ -214,17 +214,22 @@ function checkGameCompletion() {
 }
 
 function handleStart(x, y) {
+    const adjustedX = x + scrollOffsetX; // 스크롤 오프셋 적용
+    const adjustedY = y + scrollOffsetY;
+
     draggingWord = wordPositions.find(word =>
-        x > word.x && x < word.x + word.width &&
-        y > word.y && y < word.y + word.height &&
+        adjustedX > word.x && adjustedX < word.x + word.width &&
+        adjustedY > word.y && adjustedY < word.y + word.height &&
         !word.placed // 이미 배치된 단어는 클릭 불가
     );
 
     if (draggingWord) {
-        offsetX = x - draggingWord.x;
-        offsetY = y - draggingWord.y;
+        offsetX = adjustedX - draggingWord.x;
+        offsetY = adjustedY - draggingWord.y;
+        isTouching = false; // 드래그 시작 시 스크롤 비활성화
     }
 }
+
 
 function handleMove(x, y) {
     if (draggingWord) {
@@ -245,34 +250,33 @@ function handleEnd() {
                 draggingWord.y + draggingWord.height / 2 < pocket.y + pocket.height &&
                 pocket.words.length < pocket.maxRows
             ) {
-                // 중복 방지: 해당 pocket에 동일한 단어가 이미 있는지 확인
                 const wordAlreadyInPocket = pocket.words.some(
                     word => word.text === draggingWord.text
                 );
 
-                // 연습/시험 모드 동일 조건 적용
                 if (!wordAlreadyInPocket && pocket.correctWords.includes(draggingWord.text)) {
                     draggingWord.x = pocket.x + (pocket.width - draggingWord.width) / 2;
                     draggingWord.y = pocket.y + 30 + pocket.words.length * (draggingWord.height + 2);
 
                     pocket.words.push({ ...draggingWord });
-                    draggingWord.placed = true; // 단어 상태 변경
+                    draggingWord.placed = true;
                     dropped = true;
                     break;
                 }
             }
         }
 
-        // 단어를 놓지 못한 경우 원래 위치로 복귀
         if (!dropped) {
             draggingWord.x = draggingWord.originalX;
             draggingWord.y = draggingWord.originalY;
         }
 
-        draggingWord = null; // draggingWord 초기화
+        draggingWord = null; // 드래그 중인 단어 초기화
+        isTouching = true; // 스크롤 재활성화
         checkGameCompletion();
     }
 }
+
 
 canvas.addEventListener("touchstart", e => {
     const touch = e.touches[0];
@@ -284,7 +288,14 @@ canvas.addEventListener("touchstart", e => {
 });
 
 canvas.addEventListener("touchmove", e => {
-    if (isTouching) {
+    if (draggingWord) {
+        // 단어를 드래그 중이라면 스크롤 동작 제한
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        handleMove(touch.clientX - rect.left, touch.clientY - rect.top); // 드래그 처리
+        e.preventDefault(); // 스크롤 방지
+    } else if (isTouching) {
+        // 스크롤 동작 처리
         const touch = e.touches[0];
         const deltaX = touch.clientX - touchStartX;
         const deltaY = touch.clientY - touchStartY;
@@ -295,10 +306,11 @@ canvas.addEventListener("touchmove", e => {
         touchStartX = touch.clientX;
         touchStartY = touch.clientY;
 
-        draw(); // 스크롤된 상태로 다시 그리기
+        draw(); // 스크롤 상태로 다시 그리기
+        e.preventDefault();
     }
-    e.preventDefault();
 });
+
 
 canvas.addEventListener("touchend", () => {
     isTouching = false;
@@ -321,8 +333,11 @@ canvas.addEventListener("mouseup", () => {
 
 // 마우스 휠 스크롤 처리
 canvas.addEventListener("wheel", e => {
-    scrollOffsetY += e.deltaY;
-    scrollOffsetX += e.deltaX;
-    draw(); // 스크롤된 상태로 다시 그리기
-    e.preventDefault();
+    if (!draggingWord) {
+        // 드래그 중이 아닐 때만 스크롤 동작
+        scrollOffsetY += e.deltaY;
+        scrollOffsetX += e.deltaX;
+        draw(); // 스크롤된 상태로 다시 그리기
+    }
+    e.preventDefault(); // 스크롤 기본 동작 방지
 });

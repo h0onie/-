@@ -149,8 +149,8 @@ function draw() {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         ctx.fillStyle = "white";
-        ctx.font = "bold 54px Arial";
-        ctx.fillText("넌 할 수 있어!! 초수 합격 가즈아!!", canvas.width / 2, canvas.height / 2);
+        ctx.font = "bold 52px Arial";
+        ctx.fillText("그냥 하는 사람이 부러웠어요-침착맨", canvas.width / 2, canvas.height / 2);
 
         const homeButtonX = canvas.width - 150;
         const homeButtonY = canvas.height - 50;
